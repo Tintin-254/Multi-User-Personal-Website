@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LatiFlow — Personal Finance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<script src="script.js" defer></script>
+</head>
+<body>
+
+<!-- CONSENT SCREEN -->
+<div id="consent-screen">
+  <div class="consent-box">
+    <div class="consent-logo">LatiFlow</div>
+    <div class="consent-sub">PERSONAL FINANCE TRACKER</div>
+    <div class="consent-title">Before You Continue</div>
+    <p style="color:var(--text2);font-size:.85rem;margin-bottom:16px">Please review how this application handles your data:</p>
+    <div class="consent-list">
+      <div class="consent-item"><span class="icon">🔐</span><div><strong style="color:var(--text)">End-to-End Encryption</strong><br>Your financial data is encrypted locally in your browser using AES-256 encryption. Only you can read your data — other users cannot access it.</div></div>
+      <div class="consent-item"><span class="icon">💾</span><div><strong style="color:var(--text)">Local Storage</strong><br>All data is stored in your browser's local storage. Nothing is sent to external servers. Clearing your browser data will remove all records.</div></div>
+      <div class="consent-item"><span class="icon">👤</span><div><strong style="color:var(--text)">User Isolation</strong><br>Each user account has its own encrypted data space. Passwords are hashed and cannot be recovered. The admin can see user accounts but not your financial entries.</div></div>
+      <div class="consent-item"><span class="icon">📅</span><div><strong style="color:var(--text)">Data Retention</strong><br>Your data is retained until you delete it or clear your browser. You can export your data at any time from the application.</div></div>
+    </div>
+    <div class="consent-check">
+      <input type="checkbox" id="consent-check1">
+      <label for="consent-check1">I understand that this app stores data in my browser and I consent to the data handling described above</label>
+    </div>
+    <div class="consent-check">
+      <input type="checkbox" id="consent-check2">
+      <label for="consent-check2">I agree to the terms of use and understand that the admin account has user management access</label>
+    </div>
+    <button class="btn-consent" id="consent-btn" disabled onclick="acceptConsent()">Accept & Continue</button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">LatiFlow</div>
+    <div class="auth-tagline">PERSONAL FINANCE TRACKER</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="login-user" type="text" placeholder="your_username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="login-pass" type="password" placeholder="••••••••">
+      </div>
+      <div class="auth-error" id="login-error">Invalid username or password</div>
+      <button class="btn-primary" onclick="login()">Sign In</button>
+      
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="reg-name" type="text" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="reg-user" type="text" placeholder="john_doe" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="reg-pass" type="password" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="select-field" id="reg-currency">
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="TZS">TZS — Tanzanian Shilling</option>
+          <option value="UGX">UGX — Ugandan Shilling</option>
+        </select>
+      </div>
+      <div class="auth-error" id="reg-error">Username already taken</div>
+      <button class="btn-primary" onclick="register()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">LatiFlow <span>FINANCE TRACKER</span></div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="sb-name">—</div>
+      <div class="sidebar-user-role" id="sb-username">—</div>
+      <span class="sidebar-badge-admin" id="sb-admin-badge" style="display:none">ADMIN</span>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <button class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard"><span class="ni">📊</span> Dashboard</button>
+      <button class="nav-item" onclick="showView('transactions')" id="nav-transactions"><span class="ni">📋</span> Transactions</button>
+      <button class="nav-item" onclick="showView('yearly')" id="nav-yearly"><span class="ni">📅</span> Yearly View</button>
+      <button class="nav-item" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ni">⚙️</span> Admin Panel</button>
+    </div>
+    
+    <div class="year-selector">
+      <span class="year-label">Year</span>
+      <div class="year-btns">
+        <button class="year-btn" onclick="changeYear(-1)">‹</button>
+        <div class="year-display" id="year-display">2026</div>
+        <button class="year-btn" onclick="changeYear(1)">›</button>
+      </div>
+    </div>
+    
+    <div class="month-nav" id="month-nav">
+      <div class="nav-label" style="padding:8px 0 6px">Month</div>
+      <div class="month-grid" id="month-grid"></div>
+    </div>
+    
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  
+  <!-- MAIN CONTENT -->
+  <div class="main" id="main-content">
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="dash-title">January 2026</div>
+          <div class="page-subtitle" id="dash-subtitle">Monthly Overview</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-action btn-secondary" onclick="openModal()">+ Add Transaction</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card stat-income">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value type-income" id="stat-income">KES 0</div>
+          <div class="stat-sub" id="stat-income-count">0 transactions</div>
+        </div>
+        <div class="stat-card stat-expense">
+          <div class="stat-label">Total Expenditure</div>
+          <div class="stat-value type-expense" id="stat-expense">KES 0</div>
+          <div class="stat-sub" id="stat-expense-count">0 transactions</div>
+        </div>
+        <div class="stat-card stat-net" id="stat-net-card">
+          <div class="stat-label">Net Balance</div>
+          <div class="stat-value" id="stat-net">KES 0</div>
+          <div class="stat-sub" id="stat-net-label">—</div>
+        </div>
+        <div class="stat-card stat-tc">
+          <div class="stat-label">Transaction Costs</div>
+          <div class="stat-value" style="color:var(--tc)" id="stat-tc">KES 0</div>
+          <div class="stat-sub" id="stat-tc-count">0 charges</div>
+        </div>
+      </div>
+      
+      <!-- Weekly breakdown -->
+      <div class="week-cards" id="week-cards"></div>
+      
+      <!-- Charts -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-title">Expenditure by Category</div>
+          <div class="bar-wrap" id="cat-chart-exp"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Revenue by Category</div>
+          <div class="bar-wrap" id="cat-chart-rev"></div>
+        </div>
+      </div>
+      
+      <!-- Category summary -->
+      <div id="cat-grid-wrap"></div>
+      
+      <!-- Recent transactions -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">Recent Transactions</div>
+        </div>
+        <div id="recent-tx-wrap">
+          <div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No transactions this month</div><div class="empty-sub">Add your first transaction above</div></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TRANSACTIONS VIEW -->
+    <div id="view-transactions" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="tx-title">Transactions</div>
+          <div class="page-subtitle" id="tx-subtitle">All records for this month</div>
+        </div>
+        <button class="btn-action" onclick="openModal()">+ Add Transaction</button>
+      </div>
+      <div class="filter-bar">
+        <input class="search-input" id="tx-search" placeholder="Search description..." oninput="renderTransactions()">
+        <select class="filter-select" id="tx-filter-type" onchange="renderTransactions()">
+          <option value="">All Types</option>
+          <option value="Expenditure">Expenditure</option>
+          <option value="Revenue">Revenue</option>
+        </select>
+        <select class="filter-select" id="tx-filter-cat" onchange="renderTransactions()">
+          <option value="">All Categories</option>
+        </select>
+        <select class="filter-select" id="tx-filter-pay" onchange="renderTransactions()">
+          <option value="">All Payment</option>
+          <option value="Mpesa">Mpesa</option>
+          <option value="Cash">Cash</option>
+          <option value="Equity">Equity</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Category</th><th>Description</th>
+            <th>Expenditure</th><th>Revenue</th><th>Tx Cost</th>
+            <th>Payment</th><th>Type</th><th></th>
+          </tr></thead>
+          <tbody id="tx-table-body"></tbody>
+        </table>
+      </div>
+      <div id="tx-pagination" style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"></div>
+    </div>
+    
+    <!-- YEARLY VIEW -->
+    <div id="view-yearly" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="yearly-title">2026 Overview</div>
+          <div class="page-subtitle">Year at a Glance</div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card stat-income">
+          <div class="stat-label">Year Revenue</div>
+          <div class="stat-value type-income" id="yr-income">KES 0</div>
+        </div>
+        <div class="stat-card stat-expense">
+          <div class="stat-label">Year Expenditure</div>
+          <div class="stat-value type-expense" id="yr-expense">KES 0</div>
+        </div>
+        <div class="stat-card stat-net">
+          <div class="stat-label">Year Net</div>
+          <div class="stat-value" id="yr-net">KES 0</div>
+        </div>
+        <div class="stat-card stat-tc">
+          <div class="stat-label">Year Tx Costs</div>
+          <div class="stat-value" style="color:var(--tc)" id="yr-tc">KES 0</div>
+        </div>
+      </div>
+      <div class="yearly-grid" id="yearly-months-grid"></div>
+      <div class="chart-card" style="margin-bottom:24px">
+        <div class="chart-title">Monthly Revenue vs Expenditure</div>
+        <div id="yearly-bar-chart"></div>
+      </div>
+    </div>
+    
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Admin Panel</div>
+          <div class="page-subtitle">Manage users and platform data</div>
+        </div>
+      </div>
+      <div class="admin-grid">
+        <div class="admin-stat"><div class="admin-stat-label">Total Users</div><div class="admin-stat-val" id="admin-user-count">0</div></div>
+        <div class="admin-stat"><div class="admin-stat-label">Total Transactions</div><div class="admin-stat-val" id="admin-tx-count">0</div></div>
+        <div class="admin-stat"><div class="admin-stat-label">Active Since</div><div class="admin-stat-val" style="font-size:1.1rem" id="admin-since">—</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><div class="table-title">Registered Users</div></div>
+        <div id="admin-users-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TRANSACTION MODAL -->
+<div class="modal-overlay" id="tx-modal">
+  <div class="modal">
+    <div class="modal-title">Add Transaction</div>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="tx-date" type="date"></div>
+    <div class="modal-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="select-field" id="tx-cat">
+          <option>Food</option><option>Transport</option><option>Bills</option>
+          <option>Friends & Family</option><option>Loans</option><option>Savings</option>
+          <option>Equity Account</option><option>Paypal Services</option><option>Shopping</option>
+          <option>Home Appliance</option><option>Entertainment</option><option>Withdrawal</option>
+          <option>Clothings</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="select-field" id="tx-type">
+          <option>Expenditure</option>
+          <option>Revenue</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="tx-desc" type="text" placeholder="e.g. Naivas Shopping"></div>
+    <div class="modal-row">
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input class="form-input" id="tx-amount" type="number" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction Cost</label>
+        <input class="form-input" id="tx-tc" type="number" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <select class="select-field" id="tx-pay">
+        <option>Mpesa</option><option>Cash</option><option>Equity</option><option>Bank</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTransaction()">Save Transaction</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+</body>
+</html>
